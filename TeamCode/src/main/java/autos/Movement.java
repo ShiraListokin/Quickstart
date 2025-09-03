@@ -1,5 +1,7 @@
 package autos;
 
+import static autos.pathsAndConstants.Positions.*;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.pathgen.BezierCurve;
@@ -14,8 +16,10 @@ import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import java.util.ArrayList;
 
+import autos.pathsAndConstants.Positions;
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
+import subsystems.VerticalSlides;
 
 /**
  * This is an example auto that showcases movement and control of two servos autonomously.
@@ -30,42 +34,19 @@ import pedroPathing.constants.LConstants;
 @Autonomous(name = "Test!!!")
 public class Movement extends OpMode {
 
+    private VerticalSlides slides;
     private Follower follower;
+
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
 
-    //start
-    private final Pose startPose = new Pose(11, 62, 0);
-
-    /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose beginPose = new Pose(30, 45, 0);
-
-    private final Pose upPose1 = new Pose(70, 45, 0);
-
-    private final Pose upPose2 = new Pose(70, 35, 0);
-    Point[] points = {new Point(startPose), new Point(beginPose), new Point(upPose1), new Point(upPose2)};
-
     private PathChain p1;
-    private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
 
     public void buildPaths() {
-
         p1 = follower.pathBuilder()
-                .addPath(new BezierCurve(points))
+                .addPath(new BezierCurve(Positions.points))
                 .build();
-        /*
-        p2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(beginPose), new Point(upPose1)))
-                .setLinearHeadingInterpolation(beginPose.getHeading(), upPose1.getHeading())
-                .build();
-        p3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(upPose1), new Point(upPose2)))
-                .setLinearHeadingInterpolation(upPose1.getHeading(), upPose2.getHeading())
-                .build();
-
-         */
-
     }
 
     public void autonomousPathUpdate() {
@@ -75,28 +56,13 @@ public class Movement extends OpMode {
                 setPathState(1);
                 break;
             case 1:
-                telemetry.addData("code is running", "case1");
+                telemetry.addData("State", "State1");
+                slides.setIdealPos(200);
                 if(!follower.isBusy()) {
-                    telemetry.addData("code is running", "postcase1");
+                    telemetry.addData("State", "postState1");
+                    slides.setIdealPos(500);
                 }
-
-                /*
-            case 1:
-                if(!follower.isBusy()) {
-                    follower.followPath(p2,true);
-                    setPathState(2);
-                }
-                break;
-            case 2:
-                if(!follower.isBusy()) {
-                    follower.followPath(p3,true);
-                    setPathState(-1);
-                }
-                break;
-
-                 */
         }
-        telemetry.update();
     }
 
     public void setPathState(int pState) {
@@ -108,6 +74,7 @@ public class Movement extends OpMode {
     public void loop() {
 
         follower.update();
+        slides.update();
         autonomousPathUpdate();
 
         telemetry.addData("path state", pathState);
@@ -122,6 +89,7 @@ public class Movement extends OpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
+        slides = new VerticalSlides(hardwareMap, telemetry);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
